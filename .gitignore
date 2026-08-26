@@ -1,0 +1,22 @@
+# Codex-local working notes, test fixtures, plans, and visual brainstorms.
+.codex/
+.superpowers/
+
+# Local-only environment files.
+.env
+.env.*
+!.env.example
+
+# Dependency and build output.
+node_modules/
+dist/
+coverage/
+.vite/
+
+# Editor and operating-system noise.
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
