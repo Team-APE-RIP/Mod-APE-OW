@@ -56,7 +56,7 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
     const sphereVisualScale = 0.95
     const impactScaleGain = 1.9
     const impactCameraTravel = 3.9
-    const impactVerticalTravel = 3.1
+    const impactVerticalTravel = 3.5
     const initialSpherePitch = THREE.MathUtils.degToRad(14)
     const initialSphereYaw = THREE.MathUtils.degToRad(8)
     let readySent = false
