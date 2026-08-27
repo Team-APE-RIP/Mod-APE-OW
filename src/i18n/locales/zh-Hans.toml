@@ -1,0 +1,49 @@
+[meta]
+title = "A Pathetic Epoch: Rejuvenation In Purgatory"
+description = "A Pathetic Epoch: Rejuvenation In Purgatory 的宣传与展示页。"
+
+[opening]
+primary = "A Pathetic Epoch"
+secondary = "Rejuvenation In Purgatory"
+loading = "场景载入中"
+scroll = "继续"
+
+[lore]
+lines = [
+  "局部冲突不断扩大。2036年，第三次世界大战全面爆发。",
+  "在俄乌持续的“三十年战争”中，俄方始终秘密研究高破坏力打击手段，却一直没有机会进行实爆测试。",
+  "随着美国因援欧僵局与内部矛盾走向崩溃，俄方借机推进至易北河一带。",
+  "长期作战带来的内部高压，加上人力与资源持续亏空，让战线在这里陷入僵持，久攻不下。",
+  "2044年，普京病逝。次年，俄军内部的继续作战派与停战派矛盾激化。",
+  "停战派试图谈和。为了打破他们的“求和幻想”，继续作战派秘密启用了此前研发的武器，对易北河左岸发动了打击。"
+]
+
+[aftermath]
+lines = [
+  "没人料到，它的破坏力会大到这个地步。",
+  "前线各方无数士兵和平民，顷刻间化作齑粉。",
+  "这一击也直接结束了第三次世界大战。"
+]
+
+[ruins]
+lines = [
+  "这场战争几乎消灭了各方现有的全部有生力量。",
+  "这场“无胜利者的战争”，也让民众开始质疑政府。",
+  "全球因此陷入动荡。"
+]
+
+[finale]
+line_one = "全面战争结束了……"
+line_two = "接下来会发生什么，由你决定。"
+
+[platforms]
+github = "打开本作制作组的 GitHub 仓库"
+discord = "打开本组 Discord 讨论频道"
+qq = "打开本组 QQ 频道讨论区"
+bilibili = "打开本组 Bilibili 账户"
+x = "打开本组 X 官方账号"
+
+[accessibility]
+scene = "交互式三维叙事场景"
+logo = "A Pathetic Epoch: Rejuvenation In Purgatory 组标"
+platforms = "制作组官方平台入口"

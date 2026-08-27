@@ -1,0 +1,49 @@
+[meta]
+title = "A Pathetic Epoch: Rejuvenation In Purgatory"
+description = "Showcase page for A Pathetic Epoch: Rejuvenation In Purgatory."
+
+[opening]
+primary = "A Pathetic Epoch"
+secondary = "Rejuvenation In Purgatory"
+loading = "Loading the scene"
+scroll = "Continue"
+
+[lore]
+lines = [
+  "Local conflicts kept spreading. In 2036, they erupted into a full-scale World War III.",
+  "Throughout the Russo-Ukrainian “Thirty Years’ War,” Russia secretly pursued weapons of high destructive force, but never found an opportunity for a live detonation test.",
+  "As the United States collapsed amid the deadlock over aid to Europe and its own internal divisions, Russian forces seized the opportunity to advance as far as the Elbe.",
+  "Years of war brought mounting pressure at home and exhausted manpower and resources. The front stalled here, unable to break through.",
+  "Putin died of illness in 2044. A year later, the divide between those who wanted to continue the war and those who sought an armistice deepened within the Russian military.",
+  "The armistice faction sought negotiations. To shatter its “illusion of peace,” those who wanted to continue the war secretly put the previously developed weapon into use and directed it at the Elbe’s left bank."
+]
+
+[aftermath]
+lines = [
+  "No one expected its destructive force to reach this scale.",
+  "Countless soldiers from every side, along with civilians near the front, were reduced to dust in an instant.",
+  "That strike brought World War III directly to an end."
+]
+
+[ruins]
+lines = [
+  "The war wiped out nearly all of the combat personnel each side still had.",
+  "A war with no victor left people questioning their governments.",
+  "The world fell into turmoil."
+]
+
+[finale]
+line_one = "The all-out war is over..."
+line_two = "What comes next is yours to decide."
+
+[platforms]
+github = "Open the production team's GitHub repository"
+discord = "Open the team's Discord discussion channel"
+qq = "Open the team's QQ Channel discussion channel"
+bilibili = "Open the team's Bilibili account"
+x = "Open the team's official X account"
+
+[accessibility]
+scene = "Interactive three-dimensional story scene"
+logo = "A Pathetic Epoch: Rejuvenation In Purgatory emblem"
+platforms = "Official team platform links"

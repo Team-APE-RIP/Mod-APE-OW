@@ -1,0 +1,49 @@
+[meta]
+title = "A Pathetic Epoch: Rejuvenation In Purgatory"
+description = "A Pathetic Epoch: Rejuvenation In Purgatory 的宣傳與展示頁。"
+
+[opening]
+primary = "A Pathetic Epoch"
+secondary = "Rejuvenation In Purgatory"
+loading = "場景載入中"
+scroll = "繼續"
+
+[lore]
+lines = [
+  "局部衝突不斷擴大。2036年，第三次世界大戰全面爆發。",
+  "在俄烏持續的「三十年戰爭」中，俄方始終秘密研究高破壞力打擊手段，卻一直沒有機會進行實爆測試。",
+  "隨著美國因援歐僵局與內部矛盾走向崩潰，俄方借機推進至易北河一帶。",
+  "長期作戰帶來的內部高壓，加上人力與資源持續虧空，讓戰線在此陷入僵持，久攻不下。",
+  "2044年，普京病逝。次年，俄軍內部的繼續作戰派與停戰派矛盾激化。",
+  "停戰派試圖談和。為了打破他們的「求和幻想」，繼續作戰派秘密啟用了此前研發的武器，對易北河左岸發動了打擊。"
+]
+
+[aftermath]
+lines = [
+  "沒人料到，它的破壞力會大到這個地步。",
+  "前線各方無數士兵和平民，頃刻間化作齏粉。",
+  "這一擊也直接結束了第三次世界大戰。"
+]
+
+[ruins]
+lines = [
+  "這場戰爭幾乎消滅了各方現有的全部有生力量。",
+  "這場「無勝利者的戰爭」，也讓民眾開始質疑政府。",
+  "全球因此陷入動盪。"
+]
+
+[finale]
+line_one = "全面戰爭結束了……"
+line_two = "接下來會發生什麼，由你決定。"
+
+[platforms]
+github = "開啟本作製作組的 GitHub 儲存庫"
+discord = "開啟本組 Discord 討論頻道"
+qq = "開啟本組 QQ 頻道討論區"
+bilibili = "開啟本組 Bilibili 帳戶"
+x = "開啟本組 X 官方帳號"
+
+[accessibility]
+scene = "互動式三維敘事場景"
+logo = "A Pathetic Epoch: Rejuvenation In Purgatory 標誌"
+platforms = "製作組官方平台入口"

@@ -1,0 +1,49 @@
+[meta]
+title = "A Pathetic Epoch: Rejuvenation In Purgatory"
+description = "A Pathetic Epoch: Rejuvenation In Purgatory の紹介・展示ページ。"
+
+[opening]
+primary = "A Pathetic Epoch"
+secondary = "Rejuvenation In Purgatory"
+loading = "シーンを読み込んでいます"
+scroll = "続ける"
+
+[lore]
+lines = [
+  "局地的な衝突は拡大を続け、2036年、第三次世界大戦が全面戦争へ突入した。",
+  "ロシア・ウクライナ間の「三十年戦争」が続く間、ロシア側は破壊力の高い攻撃手段を秘密裏に研究していたが、実爆試験を行う機会はなかった。",
+  "欧州支援の行き詰まりと国内対立によって米国が崩壊へ向かうと、ロシア側はエルベ川一帯まで進軍した。",
+  "長期戦が国内にもたらした重圧に加え、兵力と資源の不足が続き、戦線はここで膠着した。",
+  "2044年、プーチンが病により死去。翌年、ロシア軍内部では継戦派と停戦派の対立が激しくなった。",
+  "停戦派は和平交渉を試みた。継戦派はその「和平への幻想」を打ち砕くため、以前から開発していた兵器を秘密裏に使用し、エルベ川左岸へ向けた。"
+]
+
+[aftermath]
+lines = [
+  "その破壊力が、ここまで大きいとは誰も予想していなかった。",
+  "前線にいた各陣営の無数の兵士と民間人は、一瞬で塵と化した。",
+  "その一撃が、第三次世界大戦を直接終わらせた。"
+]
+
+[ruins]
+lines = [
+  "この戦争は、各陣営に残っていた兵力のほぼすべてを消し去った。",
+  "「勝者のいない戦争」は、人々に政府への疑念を抱かせた。",
+  "世界は動乱に陥った。"
+]
+
+[finale]
+line_one = "全面戦争は終わった……"
+line_two = "この先に何が起こるかは、あなたが決める。"
+
+[platforms]
+github = "本作制作チームの GitHub リポジトリを開く"
+discord = "制作チームの Discord ディスカッションチャンネルを開く"
+qq = "制作チームの QQ チャンネルを開く"
+bilibili = "制作チームの Bilibili アカウントを開く"
+x = "制作チームの公式 X アカウントを開く"
+
+[accessibility]
+scene = "インタラクティブな3Dストーリー画面"
+logo = "A Pathetic Epoch: Rejuvenation In Purgatory ロゴ"
+platforms = "制作チームの公式プラットフォームリンク"
