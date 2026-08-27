@@ -1,0 +1,11 @@
+export const firstInteractionEvents = ['mousedown'] as const
+
+export function isPrimaryMouseClick(event: Event): event is MouseEvent {
+  return event instanceof MouseEvent && event.button === 0
+}
+
+const ignoredKeys = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'ScrollLock'])
+
+export function isExperienceKey(key: string): boolean {
+  return !ignoredKeys.has(key)
+}
