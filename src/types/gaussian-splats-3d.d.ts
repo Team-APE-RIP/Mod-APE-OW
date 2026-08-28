@@ -17,6 +17,12 @@ declare module '@mkkellogg/gaussian-splats-3d' {
     onProgress?: (percent: number, label?: string) => void
   }
 
+  export const SceneRevealMode: {
+    readonly Default: 0
+    readonly Gradual: 1
+    readonly Instant: 2
+  }
+
   export class AbortablePromise<T> {
     promise: Promise<T>
     then<R>(onResolved: (value: T) => R): AbortablePromise<R>

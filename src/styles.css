@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Sans+JP:wght@300;400&family=Noto+Sans+SC:wght@300;400&family=Noto+Sans+TC:wght@300;400&family=PT+Sans:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Sans+JP:wght@300;400;900&family=Noto+Sans+SC:wght@300;400;900&family=Noto+Sans+TC:wght@300;400;900&family=PT+Sans:wght@400;700&display=swap');
 
 :root {
   font-family: "Noto Sans SC", "Noto Sans TC", "Noto Sans JP", "PT Sans", system-ui, sans-serif;
@@ -251,11 +251,113 @@ button { font: inherit; }
   pointer-events: none;
   text-align: center;
 }
-.afterimage p { margin: 0; max-width: 72rem; font-size: clamp(1.2rem, 2.5vw, 2.5rem); letter-spacing: .05em; line-height: 1.3; }
+.afterimage p { position: relative; z-index: 1; margin: 0; max-width: 72rem; font-size: clamp(1.2rem, 2.5vw, 2.5rem); letter-spacing: .05em; line-height: 1.3; }
 .afterimage p { animation: subtitle-cut .55s cubic-bezier(.2,.7,.2,1) both; }
-.afterimage-strip { position: absolute; left: -8vw; right: -8vw; height: 18vh; background-image: url('/assets/scenes/war-ruins.webp'); background-size: 116% auto; filter: grayscale(1) contrast(1.28); }
-.afterimage-strip--top { top: 0; background-position: center 24%; animation: strip-left 14s linear infinite alternate; }
-.afterimage-strip--bottom { bottom: 0; background-position: center 76%; animation: strip-right 14s linear infinite alternate; }
+
+.aftermath-gallery {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aftermath-gallery__viewport { flex: 0 0 clamp(5.75rem, 14vh, 11rem); width: 100%; overflow: hidden; }
+.aftermath-gallery__track { display: flex; width: max-content; height: 100%; will-change: transform; }
+.aftermath-gallery__sequence {
+  --aftermath-gallery-gap: clamp(.5rem, 1vw, 1rem);
+  display: flex;
+  height: 100%;
+  gap: var(--aftermath-gallery-gap);
+  padding-right: var(--aftermath-gallery-gap);
+}
+.aftermath-gallery__tile {
+  display: block;
+  width: auto;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  flex: 0 0 auto;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.18);
+}
+
+.site-footer {
+  position: absolute;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 100;
+  color: #fff;
+  font-size: clamp(.72rem, .9vw, .86rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, .56);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: color .22s ease, text-shadow .22s ease;
+}
+.is-footer-on-light .site-footer { color: #55c8ff; text-shadow: 0 1px 10px rgba(0, 58, 92, .35); }
+
+.scene-fallback-dialog {
+  position: absolute;
+  top: max(24px, env(safe-area-inset-top));
+  right: max(24px, env(safe-area-inset-right));
+  z-index: 110;
+  width: min(25rem, calc(100vw - 48px));
+  padding: 1.2rem 1.3rem 1.25rem;
+  color: var(--paper);
+  background: rgba(8, 10, 13, .88);
+  border: 1px solid rgba(244, 240, 234, .28);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, .42), 0 0 0 1px rgba(213, 43, 85, .08);
+  backdrop-filter: blur(18px) saturate(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  animation: fallback-dialog-in .38s cubic-bezier(.18,.75,.24,1) both;
+}
+.scene-fallback-dialog h2 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: .04em;
+}
+.scene-fallback-dialog p {
+  margin: .65rem 0 1rem;
+  color: rgba(244, 240, 234, .82);
+  font-size: .88rem;
+  line-height: 1.5;
+}
+.scene-fallback-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .65rem;
+}
+.scene-fallback-dialog button {
+  width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--paper);
+  background: rgba(244, 240, 234, .08);
+  border: 1px solid rgba(244, 240, 234, .32);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+.scene-fallback-dialog button svg { width: 1.25rem; height: 1.25rem; stroke-width: 2; }
+.scene-fallback-dialog button:hover,
+.scene-fallback-dialog button:focus-visible {
+  color: #0b0d10;
+  background: var(--paper);
+  border-color: var(--paper);
+  outline: none;
+}
+.scene-fallback-dialog__choice--accept { color: #ffd9df; border-color: rgba(213, 43, 85, .58); }
+.scene-fallback-dialog__choice--accept:hover,
+.scene-fallback-dialog__choice--accept:focus-visible { color: #fff; background: var(--blood); border-color: var(--blood); }
 
 .finale {
   position: absolute;
@@ -347,10 +449,9 @@ button { font: inherit; }
 @keyframes copy-arrive-right { from { opacity: 0; transform: translate(30px, 22px); filter: blur(7px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes ruins-rise { from { opacity: 0; transform: translateY(70px); } to { opacity: 1; transform: none; } }
 @keyframes loading-mist { from { transform: translateX(-7%) scaleX(.84); opacity: .38; } to { transform: translateX(7%) scaleX(1.1); opacity: .8; } }
-@keyframes strip-left { from { background-position-x: 42%; } to { background-position-x: 58%; } }
-@keyframes strip-right { from { background-position-x: 58%; } to { background-position-x: 42%; } }
 @keyframes subtitle-cut { from { opacity: 0; transform: translateY(16px); filter: blur(5px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes title-fog-dissolve { 0% { opacity: .82; } 48% { opacity: .68; } 100% { opacity: 0; } }
+@keyframes fallback-dialog-in { from { opacity: 0; transform: translateY(-12px); filter: blur(5px); } to { opacity: 1; transform: none; filter: none; } }
 
 @media (max-width: 760px) {
   .scroll-spacer { height: 900vh; }
@@ -371,6 +472,7 @@ button { font: inherit; }
   .platform-link { width: 42px; }
   .platform-icon { width: 20px; height: 20px; }
   .finale-next { max-width: 82vw; font-size: clamp(.84rem, 3.7vw, 1.05rem); }
+  .scene-fallback-dialog { top: max(16px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); width: min(24rem, calc(100vw - 32px)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,9 +1,20 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { AftermathGallery } from './components/AftermathGallery'
 import { SceneBackdrop } from './components/SceneBackdrop'
+import { SceneFallbackDialog } from './components/SceneFallbackDialog'
 import { OpeningTitle } from './components/OpeningTitle'
 import { StoryText } from './components/StoryText'
+import { getRuntimePlatformUrls } from './config/runtime'
 import { playTheme } from './experience/audio'
-import { firstInteractionEvents, isPrimaryMouseClick } from './experience/input'
+import { firstInteractionEvents, isExperienceStartClick } from './experience/input'
+import {
+  acceptSceneFallback,
+  createSceneFallbackState,
+  dismissSceneFallback,
+  requestSceneFallback,
+  shouldRestartSceneLoad,
+  type SceneFallbackPrompt,
+} from './experience/sceneFallback'
 import { initializeLocale } from './i18n'
 import { getActiveLine } from './story/sequence'
 import { getStoryState } from './story/progress'
@@ -12,22 +23,28 @@ import './styles.css'
 const audioUrl = '/assets/audio/main-theme.ogg'
 const bootFadeDurationMs = 1_450
 const platformLinks = [
-  { key: 'github', href: 'https://github.com/Team-APE-RIP/APE', icon: '/assets/platforms/github.svg', color: '#181717' },
-  { key: 'discord', href: 'https://discord.gg/TaNYDC6kfJ', icon: '/assets/platforms/discord.svg', color: '#5865f2' },
-  { key: 'qq', href: 'https://pd.qq.com/s/clcwlblcm?b=5', icon: '/assets/platforms/qq.svg', color: '#1ebafc' },
-  { key: 'bilibili', href: 'https://space.bilibili.com/1220845388', icon: '/assets/platforms/bilibili.svg', color: '#00a1d6' },
-  { key: 'x', href: 'https://x.com/TeamAPEOfficial', icon: '/assets/platforms/x.svg', color: '#000000' },
+  { key: 'github', icon: '/assets/platforms/github.svg', color: '#181717' },
+  { key: 'discord', icon: '/assets/platforms/discord.svg', color: '#5865f2' },
+  { key: 'qq', icon: '/assets/platforms/qq.svg', color: '#1ebafc' },
+  { key: 'bilibili', icon: '/assets/platforms/bilibili.svg', color: '#00a1d6' },
+  { key: 'x', icon: '/assets/platforms/x.svg', color: '#000000' },
 ] as const
 
 function App() {
   const { language, locale } = useMemo(() => initializeLocale(), [])
+  const platformUrls = useMemo(() => getRuntimePlatformUrls(), [])
   const [progress, setProgress] = useState(0)
   const [started, setStarted] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const [sceneReady, setSceneReady] = useState(false)
   const [entryReady, setEntryReady] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
+  const [sceneAttempt, setSceneAttempt] = useState(0)
+  const [fallbackState, setFallbackState] = useState(createSceneFallbackState)
   const handleSceneReady = useCallback(() => setSceneReady(true), [])
+  const handleFallbackSuggested = useCallback((reason: SceneFallbackPrompt) => {
+    setFallbackState((current) => requestSceneFallback(current, reason))
+  }, [])
   const state = getStoryState(progress)
 
   useLayoutEffect(() => {
@@ -90,7 +107,7 @@ function App() {
   useEffect(() => {
     if (started) return undefined
     const onFirstInteraction = (event: Event) => {
-      if (!entryReady || !isPrimaryMouseClick(event)) return
+      if (!entryReady || !isExperienceStartClick(event)) return
       start()
     }
     const preventScroll = (event: Event) => {
@@ -113,19 +130,45 @@ function App() {
   const aftermathLine = getActiveLine(locale.aftermath.lines, state.aftermathProgress)
   const aftermathVisible = state.aftermathOpacity > 0.015
   const finaleVisible = state.finaleOpacity > 0.015
+  const footerOnLight = state.explosion > 0.01 || state.aftermathOpacity > 0.01
+  const fallbackPrompt = fallbackState.prompt
+  const fallbackMessage = fallbackPrompt ? locale.scene_fallback[fallbackPrompt] : ''
+  const continueGaussianLoad = () => {
+    if (shouldRestartSceneLoad(fallbackPrompt)) {
+      setSceneReady(false)
+      setEntryReady(false)
+      setLoadProgress(0)
+      setSceneAttempt((attempt) => attempt + 1)
+    }
+    setFallbackState(dismissSceneFallback)
+  }
+  const useImageFallback = () => {
+    setSceneReady(false)
+    setEntryReady(false)
+    setLoadProgress(0)
+    setFallbackState(acceptSceneFallback)
+  }
 
   return (
-    <main className={`story-shell ${started ? 'is-started' : ''} ${sceneReady ? 'is-ready' : ''} ${state.explosion > 0 ? 'is-impact' : ''}`}>
+    <main className={`story-shell ${started ? 'is-started' : ''} ${sceneReady ? 'is-ready' : ''} ${state.explosion > 0 ? 'is-impact' : ''} ${footerOnLight ? 'is-footer-on-light' : ''}`}>
       <div className="story-stage">
-        <SceneBackdrop progress={progress} activeScene={scene} ariaLabel={locale.accessibility.scene} onLoadProgress={setLoadProgress} onReady={handleSceneReady} />
+        <SceneBackdrop
+          key={sceneAttempt}
+          progress={progress}
+          activeScene={scene}
+          ariaLabel={locale.accessibility.scene}
+          renderMode={fallbackState.mode}
+          onLoadProgress={setLoadProgress}
+          onReady={handleSceneReady}
+          onFallbackSuggested={handleFallbackSuggested}
+        />
         <div className="boot-mask" aria-hidden={sceneReady}>
           <div className="boot-meter" style={{ '--load-progress': loadProgress } as React.CSSProperties}><span /></div>
         </div>
         <div className="stage-vignette" />
         <div className="explosion-wash" style={{ opacity: state.explosion }} />
         <div className="afterimage" style={{ opacity: state.aftermathOpacity }} aria-hidden={!aftermathVisible}>
-          <div className="afterimage-strip afterimage-strip--top" />
-          <div className="afterimage-strip afterimage-strip--bottom" />
+          <AftermathGallery progress={state.aftermathProgress} />
           {aftermathLine && <p key={aftermathLine}>{aftermathLine}</p>}
         </div>
         <OpeningTitle primary={locale.opening.primary} secondary={locale.opening.secondary} opacity={started ? state.titleOpacity : 1} dissolving={started} />
@@ -137,7 +180,7 @@ function App() {
             {platformLinks.map((platform) => (
               <a
                 className="platform-link"
-                href={platform.href}
+                href={platformUrls[platform.key]}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={locale.platforms[platform.key]}
@@ -155,6 +198,19 @@ function App() {
           <p className="finale-next">{locale.finale.line_two}</p>
         </div>
         <audio ref={audioRef} src={audioUrl} preload="auto" loop />
+        <footer className="site-footer">{locale.footer.copyright}</footer>
+        {fallbackPrompt && (
+          <SceneFallbackDialog
+            copy={{
+              title: locale.scene_fallback.title,
+              message: fallbackMessage,
+              continueLabel: locale.scene_fallback.continue_waiting,
+              fallbackLabel: locale.scene_fallback.use_images,
+            }}
+            onContinue={continueGaussianLoad}
+            onFallback={useImageFallback}
+          />
+        )}
       </div>
       <div className="scroll-spacer" />
     </main>

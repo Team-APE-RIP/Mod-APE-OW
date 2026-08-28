@@ -2,24 +2,32 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { DropInViewer as GaussianViewer } from '@mkkellogg/gaussian-splats-3d'
-import { toNativePromise, withTimeout } from '../experience/abortable'
+import { toNativePromise } from '../experience/abortable'
 import { fitCameraDistance } from '../experience/camera'
-import { shouldUseGaussianSplats } from '../experience/rendering'
+import { getGaussianDowngradeRecommendation } from '../experience/rendering'
+import { SPLAT_WARMUP_POSES, waitForSplatSortIdle } from '../experience/splatWarmup'
 
 interface SceneBackdropProps {
   progress: number
   activeScene: 'opening' | 'ruins'
   ariaLabel: string
+  renderMode: 'gaussian' | 'fallback'
   onLoadProgress: (progress: number) => void
   onReady: () => void
+  onFallbackSuggested: (reason: 'capability' | 'slow' | 'error') => void
 }
 
 const IMAGE_ASPECT = 1672 / 941
 const SHARP_VERTICAL_FOV = THREE.MathUtils.radToDeg(2 * Math.atan(941 / (2 * 1330.3167724609375)))
+const SPLAT_SLOW_THRESHOLD_MS = 30_000
 
 interface NavigatorWithPerformanceHints extends Navigator {
   connection?: { saveData?: boolean }
   deviceMemory?: number
+}
+
+type GaussianViewerWithSortState = GaussianViewer & {
+  viewer?: { sortRunning?: boolean }
 }
 
 function loadTexture(url: string, onSettled?: () => void): THREE.Texture {
@@ -30,7 +38,15 @@ function loadTexture(url: string, onSettled?: () => void): THREE.Texture {
   return texture
 }
 
-export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress, onReady }: SceneBackdropProps) {
+export function SceneBackdrop({
+  progress,
+  activeScene,
+  ariaLabel,
+  renderMode,
+  onLoadProgress,
+  onReady,
+  onFallbackSuggested,
+}: SceneBackdropProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const progressRef = useRef(progress)
@@ -48,7 +64,12 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
     let frame = 0
     let openingViewer: GaussianViewer | null = null
     let ruinsViewer: GaussianViewer | null = null
+    let openingOperation: ReturnType<GaussianViewer['addSplatScene']> | null = null
+    let ruinsOperation: ReturnType<GaussianViewer['addSplatScene']> | null = null
     let ruinsLoadStarted = false
+    let openingSplatSettled = false
+    let ruinsSplatSettled = false
+    let splatWarmupStarted = false
     let sphereRoot: THREE.Group | null = null
     let sphereRadius = 0.5
     let sphereBaseDistance = 5
@@ -60,6 +81,8 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
     const initialSpherePitch = THREE.MathUtils.degToRad(14)
     const initialSphereYaw = THREE.MathUtils.degToRad(8)
     let readySent = false
+    let errorSuggested = false
+    let slowTimer: number | null = null
     const pointerTarget = new THREE.Vector2()
     const pointerCurrent = new THREE.Vector2()
     const jitterCurrent = new THREE.Vector3()
@@ -88,18 +111,34 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
 
     const hints = navigator as NavigatorWithPerformanceHints
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const useSplats = shouldUseGaussianSplats({
+    const gaussianCapabilities = {
       width: window.innerWidth,
       reducedMotion,
       saveData: hints.connection?.saveData ?? false,
       deviceMemory: hints.deviceMemory,
-    })
+    }
+    const useSplats = renderMode === 'gaussian'
+    if (useSplats && getGaussianDowngradeRecommendation(gaussianCapabilities)) {
+      onFallbackSuggested('capability')
+    }
+    const clearSlowTimer = () => {
+      if (slowTimer === null) return
+      window.clearTimeout(slowTimer)
+      slowTimer = null
+    }
+    const suggestErrorFallback = () => {
+      if (disposed || errorSuggested) return
+      errorSuggested = true
+      clearSlowTimer()
+      onFallbackSuggested('error')
+    }
     const loadState = {
       openingImage: 0,
       ruinsImage: 0,
       model: 0,
       openingSplat: useSplats ? 0 : 1,
       ruinsSplat: useSplats ? 0 : 1,
+      splatWarmup: useSplats ? 0 : 1,
     }
     const updateLoadState = (part: keyof typeof loadState, value: number) => {
       if (disposed || !Number.isFinite(value)) return
@@ -108,10 +147,17 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
       onLoadProgress(combined)
       if (!readySent && combined >= 0.999) {
         readySent = true
+        clearSlowTimer()
         onReady()
       }
     }
     onLoadProgress(0)
+    if (useSplats) {
+      slowTimer = window.setTimeout(() => {
+        slowTimer = null
+        if (!disposed && !readySent) onFallbackSuggested('slow')
+      }, SPLAT_SLOW_THRESHOLD_MS)
+    }
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -138,6 +184,47 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
     splatCamera.lookAt(0, 0, 1)
     const openingSplatScene = new THREE.Scene()
     const ruinsSplatScene = new THREE.Scene()
+
+    const waitForNextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    const waitForSplatSort = async (viewer: GaussianViewer) => {
+      return waitForSplatSortIdle({
+        waitForFrame: waitForNextFrame,
+        isSortRunning: () => (viewer as GaussianViewerWithSortState).viewer?.sortRunning ?? false,
+        isDisposed: () => disposed,
+      })
+    }
+    const warmSplatViewer = async (viewer: GaussianViewer, targetScene: THREE.Scene, scene: 'opening' | 'ruins') => {
+      const warmupCamera = splatCamera.clone()
+      for (const pose of SPLAT_WARMUP_POSES[scene]) {
+        warmupCamera.position.fromArray(pose.position)
+        warmupCamera.lookAt(...pose.target)
+        warmupCamera.updateMatrixWorld()
+        const autoClear = renderer.autoClear
+        renderer.autoClear = true
+        renderer.render(targetScene, warmupCamera)
+        renderer.autoClear = autoClear
+        if (!await waitForSplatSort(viewer)) return
+      }
+    }
+
+    const maybeWarmSplats = () => {
+      if (!useSplats || !openingSplatSettled || !ruinsSplatSettled || splatWarmupStarted) return
+      splatWarmupStarted = true
+      void (async () => {
+        try {
+          if (openingViewer && ruinsViewer) {
+            await warmSplatViewer(openingViewer, openingSplatScene, 'opening')
+            if (!disposed) await warmSplatViewer(ruinsViewer, ruinsSplatScene, 'ruins')
+          }
+          updateLoadState('splatWarmup', 1)
+        } catch (error) {
+          if (!disposed) {
+            suggestErrorFallback()
+            console.error('Gaussian scene warmup failed', error)
+          }
+        }
+      })()
+    }
 
     const modelScene = new THREE.Scene()
     const modelCamera = new THREE.PerspectiveCamera(32, 1, 0.01, 100)
@@ -174,7 +261,7 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
     }, () => updateLoadState('model', 1))
 
     const createSplatViewer = async (targetScene: THREE.Scene) => {
-      const { DropInViewer } = await import('@mkkellogg/gaussian-splats-3d')
+      const { DropInViewer, SceneRevealMode } = await import('@mkkellogg/gaussian-splats-3d')
       if (disposed) return null
       const viewer = new DropInViewer({
         sharedMemoryForWorkers: false,
@@ -182,6 +269,7 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
         halfPrecisionCovariancesOnGPU: true,
         inMemoryCompressionLevel: 1,
         dynamicScene: false,
+        sceneRevealMode: SceneRevealMode.Instant,
         enableOptionalEffects: false,
         freeIntermediateSplatData: true,
       })
@@ -191,31 +279,32 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
 
     const loadOpeningSplat = async () => {
       let viewer: GaussianViewer | null = null
-      let operation: ReturnType<GaussianViewer['addSplatScene']> | null = null
       try {
         viewer = await createSplatViewer(openingSplatScene)
         if (!viewer) return
         openingViewer = viewer
-        operation = viewer.addSplatScene('/assets/scenes/elbe-front.ksplat', {
+        const operation = viewer.addSplatScene('/assets/scenes/elbe-front.ksplat', {
           showLoadingUI: false,
-          progressiveLoad: true,
+          progressiveLoad: false,
           onProgress: (percent) => updateLoadState('openingSplat', percent / 100),
         })
-        await withTimeout(toNativePromise(operation), 25_000, 'Opening Gaussian scene timed out')
-        if (disposed) {
-          await viewer.dispose()
-          return
-        }
+        openingOperation = operation
+        await toNativePromise(operation)
+        if (disposed) return
         updateLoadState('openingSplat', 1)
+        openingSplatSettled = true
+        maybeWarmSplats()
       } catch (error) {
-        operation?.abort(error)
+        if (disposed) return
         if (viewer) {
           openingViewer = null
-          if (!disposed) openingSplatScene.remove(viewer)
+          openingSplatScene.remove(viewer)
           void viewer.dispose().catch(() => undefined)
         }
-        updateLoadState('openingSplat', 1)
+        suggestErrorFallback()
         console.error('Gaussian scene failed to load', error)
+      } finally {
+        openingOperation = null
       }
     }
 
@@ -223,31 +312,32 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
       if (!useSplats || ruinsLoadStarted || disposed) return
       ruinsLoadStarted = true
       let viewer: GaussianViewer | null = null
-      let operation: ReturnType<GaussianViewer['addSplatScene']> | null = null
       try {
         viewer = await createSplatViewer(ruinsSplatScene)
         if (!viewer) return
         ruinsViewer = viewer
-        operation = viewer.addSplatScene('/assets/scenes/war-ruins.ksplat', {
+        const operation = viewer.addSplatScene('/assets/scenes/war-ruins.ksplat', {
           showLoadingUI: false,
-          progressiveLoad: true,
+          progressiveLoad: false,
           onProgress: (percent) => updateLoadState('ruinsSplat', percent / 100),
         })
-        await withTimeout(toNativePromise(operation), 25_000, 'Ruins Gaussian scene timed out')
-        if (disposed) {
-          await viewer.dispose()
-          return
-        }
+        ruinsOperation = operation
+        await toNativePromise(operation)
+        if (disposed) return
         updateLoadState('ruinsSplat', 1)
+        ruinsSplatSettled = true
+        maybeWarmSplats()
       } catch (error) {
-        operation?.abort(error)
+        if (disposed) return
         if (viewer) {
           ruinsViewer = null
-          if (!disposed) ruinsSplatScene.remove(viewer)
+          ruinsSplatScene.remove(viewer)
           void viewer.dispose().catch(() => undefined)
         }
-        updateLoadState('ruinsSplat', 1)
+        suggestErrorFallback()
         console.error('Gaussian scene failed to load', error)
+      } finally {
+        ruinsOperation = null
       }
     }
 
@@ -363,6 +453,10 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
 
     return () => {
       disposed = true
+      clearSlowTimer()
+      const disposalReason = new DOMException('Gaussian scene disposed', 'AbortError')
+      openingOperation?.abort(disposalReason)
+      ruinsOperation?.abort(disposalReason)
       cancelAnimationFrame(frame)
       resizeObserver.disconnect()
       window.removeEventListener('pointermove', onPointerMove)
@@ -383,7 +477,7 @@ export function SceneBackdrop({ progress, activeScene, ariaLabel, onLoadProgress
       })
       renderer.dispose()
     }
-  }, [onLoadProgress, onReady])
+  }, [onFallbackSuggested, onLoadProgress, onReady, renderMode])
 
   return (
     <div ref={rootRef} className="scene-backdrop">
