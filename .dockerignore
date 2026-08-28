@@ -1,0 +1,11 @@
+.git
+.gitignore
+.codex
+.superpowers
+node_modules
+dist
+coverage
+.vite
+.env
+.env.*
+*.log
