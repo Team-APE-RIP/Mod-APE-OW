@@ -36,6 +36,17 @@ lines = [
 line_one = "全面戦争は終わった……"
 line_two = "この先に何が起こるかは、あなたが決める。"
 
+[footer]
+copyright = "© Team APE:RIP"
+
+[scene_fallback]
+title = "画像版に切り替えますか？"
+capability = "この端末では、3Dシーンの読み込みに時間がかかる場合があります。"
+slow = "3Dシーンの読み込みに予想以上の時間がかかっています。"
+error = "3Dシーンを読み込めませんでした。"
+continue_waiting = "いいえ、切り替えない"
+use_images = "はい、画像版に切り替える"
+
 [platforms]
 github = "本作制作チームの GitHub リポジトリを開く"
 discord = "制作チームの Discord ディスカッションチャンネルを開く"

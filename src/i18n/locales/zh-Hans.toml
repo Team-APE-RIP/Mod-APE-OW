@@ -36,6 +36,17 @@ lines = [
 line_one = "全面战争结束了……"
 line_two = "接下来会发生什么，由你决定。"
 
+[footer]
+copyright = "© Team APE:RIP"
+
+[scene_fallback]
+title = "要切换到图片版吗？"
+capability = "这台设备加载 3D 场景可能需要更久。"
+slow = "3D 场景加载得比预期慢。"
+error = "3D 场景加载失败。"
+continue_waiting = "否，不切换"
+use_images = "是，切换到图片版"
+
 [platforms]
 github = "打开本作制作组的 GitHub 仓库"
 discord = "打开本组 Discord 讨论频道"

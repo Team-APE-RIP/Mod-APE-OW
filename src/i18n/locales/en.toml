@@ -36,6 +36,17 @@ lines = [
 line_one = "The all-out war is over..."
 line_two = "What comes next is yours to decide."
 
+[footer]
+copyright = "© Team APE:RIP"
+
+[scene_fallback]
+title = "Switch to the image version?"
+capability = "The 3D scene may take longer to load on this device."
+slow = "The 3D scene is taking longer than expected to load."
+error = "The 3D scene couldn't be loaded."
+continue_waiting = "No, don't switch"
+use_images = "Yes, switch to the image version"
+
 [platforms]
 github = "Open the production team's GitHub repository"
 discord = "Open the team's Discord discussion channel"

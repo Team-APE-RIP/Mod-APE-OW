@@ -14,6 +14,15 @@ export interface Locale {
   aftermath: { lines: string[] }
   ruins: { lines: string[] }
   finale: { line_one: string; line_two: string }
+  footer: { copyright: string }
+  scene_fallback: {
+    title: string
+    capability: string
+    slow: string
+    error: string
+    continue_waiting: string
+    use_images: string
+  }
   platforms: { github: string; discord: string; qq: string; bilibili: string; x: string }
   accessibility: { scene: string; logo: string; platforms: string }
 }
