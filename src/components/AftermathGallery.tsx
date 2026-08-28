@@ -1,6 +1,5 @@
 interface AftermathGalleryProps {
-  ariaLabel?: string
-  className?: string
+  progress: number
 }
 
 const upperImages = Array.from({ length: 10 }, (_, index) => imageUrl(index + 1))
@@ -10,91 +9,42 @@ function imageUrl(index: number): string {
   return `/assets/aftermath/aftermath-${String(index).padStart(2, '0')}.webp`
 }
 
-function ImageTrack({ images, direction }: { images: string[]; direction: 'rtl' | 'ltr' }) {
+// eslint-disable-next-line react-refresh/only-export-components
+export function getAftermathTrackTravel(progress: number): { upper: string; lower: string } {
+  const clampedProgress = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0
+  const viewportShare = Number(((1 - clampedProgress) * 100).toFixed(4))
+  const trackShare = Number((clampedProgress * 100).toFixed(4))
+
+  return {
+    upper: `calc(${viewportShare}vw - ${trackShare}%)`,
+    lower: `calc(${trackShare}vw - ${viewportShare}%)`,
+  }
+}
+
+function ImageTrack({ images, direction, travel }: { images: string[]; direction: 'rtl' | 'ltr'; travel: string }) {
   return (
     <div className={`aftermath-gallery__viewport aftermath-gallery__viewport--${direction}`} aria-hidden="true">
-      <div className={`aftermath-gallery__track aftermath-gallery__track--${direction}`}>
-        {[0, 1].map((copy) => (
-          <div className="aftermath-gallery__sequence" key={copy}>
-            {images.map((src) => <img className="aftermath-gallery__tile" src={src} alt="" key={`${src}-${copy}`} />)}
-          </div>
-        ))}
+      <div
+        className={`aftermath-gallery__track aftermath-gallery__track--${direction}`}
+        style={{ transform: `translate3d(${travel}, 0, 0)` }}
+      >
+        <div className="aftermath-gallery__sequence">
+          {images.map((src) => (
+            <img className="aftermath-gallery__tile" src={src} alt="" loading="lazy" decoding="async" key={src} />
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
-export function AftermathGallery({ ariaLabel = 'Aftermath archive', className = '' }: AftermathGalleryProps) {
+export function AftermathGallery({ progress }: AftermathGalleryProps) {
+  const travel = getAftermathTrackTravel(progress)
+
   return (
-    <section className={`aftermath-gallery ${className}`.trim()} aria-label={ariaLabel}>
-      <style>{styles}</style>
-      <ImageTrack images={upperImages} direction="rtl" />
-      <ImageTrack images={lowerImages} direction="ltr" />
-    </section>
+    <div className="aftermath-gallery" aria-hidden="true">
+      <ImageTrack images={upperImages} direction="rtl" travel={travel.upper} />
+      <ImageTrack images={lowerImages} direction="ltr" travel={travel.lower} />
+    </div>
   )
 }
-
-const styles = `
-  .aftermath-gallery {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    align-content: space-between;
-    gap: clamp(.8rem, 2.2vh, 1.8rem);
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  .aftermath-gallery__viewport {
-    width: 100%;
-    overflow: hidden;
-  }
-
-  .aftermath-gallery__track {
-    display: flex;
-    width: max-content;
-    height: 100%;
-    will-change: transform;
-  }
-
-  .aftermath-gallery__sequence {
-    --aftermath-gallery-gap: clamp(.5rem, 1vw, 1rem);
-    display: flex;
-    gap: var(--aftermath-gallery-gap);
-    padding-right: var(--aftermath-gallery-gap);
-  }
-
-  .aftermath-gallery__tile {
-    display: block;
-    width: clamp(11rem, 21vw, 25rem);
-    height: 100%;
-    aspect-ratio: 16 / 9;
-    flex: 0 0 auto;
-    object-fit: cover;
-    filter: grayscale(1) contrast(1.18);
-  }
-
-  .aftermath-gallery__track--rtl {
-    animation: aftermath-gallery-scroll-rtl 34s linear infinite;
-  }
-
-  .aftermath-gallery__track--ltr {
-    animation: aftermath-gallery-scroll-ltr 34s linear infinite;
-  }
-
-  @keyframes aftermath-gallery-scroll-rtl {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-
-  @keyframes aftermath-gallery-scroll-ltr {
-    from { transform: translateX(-50%); }
-    to { transform: translateX(0); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .aftermath-gallery__track { animation: none; }
-    .aftermath-gallery__track--ltr { transform: translateX(-25%); }
-  }
-`
